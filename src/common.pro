@@ -1,0 +1,11 @@
+common boolean,true,false
+common grid,rr,rrr,dr,dr1,dr2
+common dim,nx,mx,l1,l2
+common order,nghost,order
+common thermo,stbz,tb,cp,cv,gamma,gamma1,epsi,norm
+common teffs_for_tau,T1,T2,T3,T4,T5,T6,T7,T8,T9
+common coeffs,c1,c2,c3,cprime
+common aux,aux_mx,aux_nx
+common root,method
+common gridtype,gridtype
+common iteration,maxit
