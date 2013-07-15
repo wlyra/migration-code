@@ -11,7 +11,7 @@ function get_planet_term,sigma,tmid,cp,gamma,q,sqrtgm,ap,omega
 ;
   coef=sign(ap-rr) * q^2 * sqrtgm * rr1
   n=10
-  arg = sqrt(rr)*sigma*( (rr < a) / ( abs(rr-a)^n + H^n )^(1./n) )^4
+  arg = sqrt(rr)*sigma*( (rr < ap) / ( abs(rr-ap)^n + H^n )^(1./n) )^4
   atmp=[[0,0,0],arg,[0,0,0]]
   dexp=der(atmp)
 ;
