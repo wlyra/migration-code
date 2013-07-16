@@ -15,6 +15,9 @@ function get_planet_term,sigma,tmid,cp,gamma,q,sqrtgm,ap,omega
   atmp=[[0,0,0],arg,[0,0,0]]
   dexp=der(atmp)
 ;
-  return,coef*dexp
+  temp = coef * dexp
+  planet_term = temp - total(temp*rr)/total(rr)
+
+  return,planet_term
 ;
 end
