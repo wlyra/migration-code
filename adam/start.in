@@ -3,6 +3,7 @@
  evolve_density             = 'yes'                                                        ;
  evolve_temperature         = 'no'                                                         ;
  evolve_planet              = 'no'                                                         ;
+ carve_gap                  = 'yes'                                                         ;
  update_timestep            = 'yes'   ; switchable for debugging purposes                  ;
  restart                    = 'no'                                                         ;
  itplot                     = 500     ; frequency to plot the graphs, originally 500                       ;
