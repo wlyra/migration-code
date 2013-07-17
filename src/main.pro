@@ -99,6 +99,9 @@ pro main
     GNewton=6.67d-8
     Rgas=8.314d7
     stefan_boltzmann=5.6704d-5  ; erg cm-2 s-1 K-4
+    dsigma_mass = [] ; originally nothing
+    swind_mass = [] ; originally nothing
+    term1_mass = [] ; originally nothing
 ;
 ; grid
 ;
@@ -384,14 +387,16 @@ pro main
           for ip=0,np-1 do begin
              tmp_planet = get_planet_term(sigma,tmid,cp,gamma,q[ip],sqrtgm,ap[ip],omega)
              planet_term=planet_term + tmp_planet
+             ; Should the above line be instead:
+             ; planet_term[ip] = tmp_planet
           endfor
 ;
 ; evolution equation with sigma*nu as dependent variable
 ;
-                                ;dsigma=3*del2sigmanu +
-                                ;4.5*rr1*gsigmanu - swind +
-                                ;                   planet_term
-          dsigma=planet_term
+          dsigma = 3*del2sigmanu + 4.5*rr1*gsigmanu - swind + planet_term
+          ; dsigma_mass = [dsigma_mass, [2*!dpi*total(dsigma*rr*dr)] ]
+          ; swind_mass = [swind_mass, [2*!dpi*total(-swind*rr*dr)] ]
+          ; term1_mass = [term1_mass, [2*!dpi*total((dsigma+swind-planet_term)*rr*dr)] ]
         endif
 ;
 ; planet evolution (Lagrangian)
@@ -444,15 +449,15 @@ pro main
 ; print to screen
 ;
         
-        line="print,it,time[ic]*myr1,dt*myr1,rhomax,rhomin,mass[ic]*msun1,ttmax,ttmin,mdotm*msun_yr1"
-        for ip=0,np-1 do begin
-            line=line+",ap["+strtrim(ip,2)+"]*r_ref1"
-        endfor
-        if (execute(line) ne 1) then begin
-            print,line
-            print,'There was a problem with printing to screen'
-            stop
-        endif
+        ; line="print,it,time[ic]*myr1,dt*myr1,rhomax,rhomin,mass[ic]*msun1,ttmax,ttmin,mdotm*msun_yr1"
+        ; for ip=0,np-1 do begin
+        ;     line=line+",ap["+strtrim(ip,2)+"]*r_ref1"
+        ; endfor
+        ; if (execute(line) ne 1) then begin
+        ;     print,line
+        ;     print,'There was a problem with printing to screen'
+        ;     stop
+        ; endif ; originally 447-455 were uncommented
 ;        print,it,time[ic]*myr1,rhomax,rhomin,mass[ic]*msun1,ttmax,ttmin,mdotm*msun_yr1,ap[0]*r_ref1,ap[1]*r_ref1,ap[2]*r_ref1
 ;
 ; print to file
@@ -505,7 +510,7 @@ pro main
     if (tcheck ne tcheck_old) then begin
         isave=isave+1
         save,t,sigma,tmid,ap,filename='./data/VAR'+strtrim(isave,2)+'.sav'
-        print,'time=',t*myr1,' Myr. Wrote VAR'+strtrim(isave,2)+' to disk.'
+        ; print,'time=',t*myr1,' Myr. Wrote VAR'+strtrim(isave,2)+' to disk.' ; originally not commented
     endif
 
       if ((it mod itplot) eq 0) then begin
@@ -513,30 +518,40 @@ pro main
           erase
           plot,rr*r_ref1,sigma,ys=1,$
             title='t='+strtrim(t*myr1,2)+' Myr',$
-            yr=[.00004,5000.],xtitle='!8r!x',/ylog,xs=3,/xlog
+            yr=[.00004,5000.],xtitle='!8r!x',/ylog,xs=3,/xlog; originally .00004,5000.
           oplot,rr*r_ref1,sigma_init,li=1
 
-          plot,rr*r_ref1,tmid,xs=3,$
-            title='temperature',xtitle='!8r!x',/ylog,yr=[9,2000],ys=1,/xlog
-          oplot,rr*r_ref1,tmid_orig,li=1
-;
+          ; plot,rr*r_ref1,tmid,xs=3,$
+          ;   title='temperature',xtitle='!8r!x',/ylog,yr=[9,2000],ys=1,/xlog
+          ; oplot,rr*r_ref1,tmid_orig,li=1
+
+          ; plot,time[0:ic-1]*Myr1,dsigma_mass,xr=[0,tmax_myr]
+          
+          ; plot,time[0:ic-1]*Myr1,swind_mass,xr=[0,tmax_myr]
+
+          ; plot,time[0:ic-1]*Myr1,term1_mass,xr=[0,tmax_myr],title='term1_mass vs. time'
+          
+          plot,rr*r_ref1,dsigma,title='dsigma vs. radius'
+
+          plot,rr*r_ref1,planet_term,title='planet_term vs. radius'
+
           plot,time[0:ic-1]*Myr1,100*mass[0:ic-1]/mass[0],ys=3,$
             title='Disk mass - Remaining percentage',xtitle='time (Myr)',xr=[0,tmax_myr],yr=[0,100]
 
-          plot,time[0:ic-1]*Myr1,position[0:ic-1,0]*r_ref1,$
-            title='planet position',xtitle='time (myr)',xr=[0,tmax_myr],$
-            yr=[0.1,30],ys=1,/ylog,/nodata
-          for ip=0,np-1 do begin
-              if (mp[ip]/mearth eq 1.) then begin
-                  cor=100
-              endif else $
-              if (mp[ip]/mearth eq 10) then begin
-                  cor=150
-              endif else begin
-                  cor=50
-              endelse
-              oplot,time[0:ic-1]*Myr1,position[0:ic-1,ip]*r_ref1,color=cor
-          endfor
+          ; plot,time[0:ic-1]*Myr1,position[0:ic-1,0]*r_ref1,$
+          ;   title='planet position',xtitle='time (myr)',xr=[0,tmax_myr],$
+          ;   yr=[0.1,30],ys=1,/ylog,/nodata
+          ; for ip=0,np-1 do begin
+          ;     if (mp[ip]/mearth eq 1.) then begin
+          ;         cor=100
+          ;     endif else $
+          ;     if (mp[ip]/mearth eq 10) then begin
+          ;         cor=150
+          ;     endif else begin
+          ;         cor=50
+          ;     endelse
+          ;     oplot,time[0:ic-1]*Myr1,position[0:ic-1,ip]*r_ref1,color=cor
+          ; endfor
 ;        wait,0.1
 
         endif
