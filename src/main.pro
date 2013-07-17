@@ -62,6 +62,14 @@ pro main
         print,"use evolve_planet='yes' or 'no' in start.pro"
     endelse
 ;
+    if (carve_gap eq 'no') then begin
+        lplanet_gap=false
+    endif else if (carve_gap eq 'yes') then begin 
+        lplanet_gap=true
+    endif else begin
+        print,"use carve_gap='yes' or 'no' in start.pro"
+    endelse
+;
     if (update_timestep eq 'no') then begin
         lupdate_timestep=false
     endif else if (update_timestep eq 'yes') then begin 
@@ -257,7 +265,7 @@ pro main
 ;
     time=dblarr(ndim)
     mass=dblarr(ndim)
-    np=n_elements(mp) 
+    np=n_elements(mp)
     position=dblarr(ndim,np)
     tmax=tmax_myr*myr
     tcheck=0.
@@ -383,13 +391,16 @@ pro main
           del2sigmanu = der2(sigma_nu)
           gsigmanu    =  der(sigma_nu)       
 ;
-          planet_term=0
-          for ip=0,np-1 do begin
-             tmp_planet = get_planet_term(sigma,tmid,cp,gamma,q[ip],sqrtgm,ap[ip],omega)
-             planet_term=planet_term + tmp_planet
-             ; Should the above line be instead:
-             ; planet_term[ip] = tmp_planet
-          endfor
+          if (lplanet_gap eq true) then begin
+                                ;loop over the np planet present in
+                                ;the simulation, sum their contributions
+             planet_term=replicate(0.,nx)
+             for ip=0,np-1 do begin
+                planet_term = planet_term + get_planet_term(sigma,tmid,cp,gamma,q[ip],sqrtgm,ap[ip],omega)
+             endfor
+          endif else begin
+             planet_term=replicate(0.,nx)
+          endelse
 ;
 ; evolution equation with sigma*nu as dependent variable
 ;
@@ -531,9 +542,9 @@ pro main
 
           ; plot,time[0:ic-1]*Myr1,term1_mass,xr=[0,tmax_myr],title='term1_mass vs. time'
           
-          plot,rr*r_ref1,dsigma,title='dsigma vs. radius'
+          plot,rr*r_ref1,dsigma,title='dsigma vs. radius',xs=3,/xlog
 
-          plot,rr*r_ref1,planet_term,title='planet_term vs. radius'
+          plot,rr*r_ref1,planet_term,title='planet_term vs. radius',xs=3,/xlog
 
           plot,time[0:ic-1]*Myr1,100*mass[0:ic-1]/mass[0],ys=3,$
             title='Disk mass - Remaining percentage',xtitle='time (Myr)',xr=[0,tmax_myr],yr=[0,100]
