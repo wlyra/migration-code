@@ -21,3 +21,6 @@ function get_planet_term,sigma,tmid,cp,gamma,q,sqrtgm,ap,omega
   return,planet_term
 ;
 end
+
+
+; change ha
