@@ -10,8 +10,15 @@ function get_planet_term,sigma,tmid,cp,gamma,q,sqrtgm,ap,omega
   H=sqrt(cs2*gamma)/omega
 ;
   coef=sign(ap-rr) * q^2 * sqrtgm * rr1
-  n=10
-  arg = sqrt(rr)*sigma*( (rr < ap) / ( abs(rr-ap)^n + H^n )^(1./n) )^4
+  n_smooth=10.
+  num = rr < ap 
+;
+; The original term was max(abs(rr-ap),H)
+;
+  tmp = abs(rr-ap)
+  den = (tmp^n_smooth + H^n_smooth)^(1./n_smooth)
+;
+  arg = sqrt(rr)*sigma*(num/den)^4.
   atmp=[[0,0,0],arg,[0,0,0]]
   dexp=der(atmp)
 ;
