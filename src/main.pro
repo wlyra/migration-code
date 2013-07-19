@@ -62,6 +62,14 @@ pro main
         print,"use evolve_planet='yes' or 'no' in start.in"
     endelse
 ;
+    if (carve_gap eq 'no') then begin
+        lplanet_gap=false
+    endif else if (carve_gap eq 'yes') then begin 
+        lplanet_gap=true
+    endif else begin
+        print,"use carve_gap='yes' or 'no' in start.pro"
+    endelse
+;
     if (update_timestep eq 'no') then begin
         lupdate_timestep=false
     endif else if (update_timestep eq 'yes') then begin 
@@ -274,7 +282,7 @@ pro main
 ;
     time=dblarr(ndim)
     mass=dblarr(ndim)
-    np=n_elements(mp) 
+    np=n_elements(mp)
     position=dblarr(ndim,np)
     tmax=tmax_myr*myr
     tcheck=0.
@@ -400,11 +408,24 @@ pro main
           del2sigmanu = der2(sigma_nu)
           gsigmanu    =  der(sigma_nu)       
 ;
+<<<<<<< HEAD
           planet_term=0
           for ip=0,np-1 do begin
              tmp_planet = get_planet_term(sigma,tmid,cp,gamma,q[ip],sqrtgm,ap[ip],omega)
              planet_term=planet_term + tmp_planet
           endfor
+=======
+          if (lplanet_gap eq true) then begin
+                                ;loop over the np planet present in
+                                ;the simulation, sum their contributions
+             planet_term=replicate(0.,nx)
+             for ip=0,np-1 do begin
+                planet_term = planet_term + get_planet_term(sigma,tmid,cp,gamma,q[ip],sqrtgm,ap[ip],omega)
+             endfor
+          endif else begin
+             planet_term=replicate(0.,nx)
+          endelse
+>>>>>>> d579b87c8756c29ad07fc88bf10852c3662c0504
 ;
 ; evolution equation with sigma*nu as dependent variable
 ;
@@ -566,6 +587,7 @@ pro main
           endif else begin
               ; Alternate plots
 
+<<<<<<< HEAD
               plot,rr*r_ref1,sigma,ys=1,$
                 title='t='+strtrim(t*myr1,2)+' Myr',$
                 yr=[.00004,500.],xtitle='!8r!x';,/ylog,xs=3,/xlog; originally .00004,5000.
@@ -574,6 +596,13 @@ pro main
               ; plot,time[0:ic-1]*Myr1,dsigma_mass,xr=[0,tmax_myr]
               
               ; plot,time[0:ic-1]*Myr1,swind_mass,xr=[0,tmax_myr]
+=======
+          ; plot,time[0:ic-1]*Myr1,term1_mass,xr=[0,tmax_myr],title='term1_mass vs. time'
+          
+          plot,rr*r_ref1,dsigma,title='dsigma vs. radius',xs=3,/xlog
+
+          plot,rr*r_ref1,planet_term,title='planet_term vs. radius',xs=3,/xlog
+>>>>>>> d579b87c8756c29ad07fc88bf10852c3662c0504
 
               ; plot,time[0:ic-1]*Myr1,term1_mass,xr=[0,tmax_myr],title='term1_mass vs. time'
               
