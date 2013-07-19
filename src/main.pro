@@ -43,7 +43,7 @@ pro main
     endif else if (evolve_density eq 'yes') then begin 
         ldensity=true
     endif else begin
-        print,"use evolve_density='yes' or 'no' in start.pro"
+        print,"use evolve_density='yes' or 'no' in start.in"
     endelse
 ;
     if (evolve_temperature eq 'no') then begin
@@ -51,7 +51,7 @@ pro main
     endif else if (evolve_temperature eq 'yes') then begin 
         ltemperature=true
     endif else begin
-        print,"use evolve_temperature='yes' or 'no' in start.pro"
+        print,"use evolve_temperature='yes' or 'no' in start.in"
     endelse
 ;
     if (evolve_planet eq 'no') then begin
@@ -59,7 +59,7 @@ pro main
     endif else if (evolve_planet eq 'yes') then begin 
         lplanet=true
     endif else begin
-        print,"use evolve_planet='yes' or 'no' in start.pro"
+        print,"use evolve_planet='yes' or 'no' in start.in"
     endelse
 ;
     if (update_timestep eq 'no') then begin
@@ -67,7 +67,7 @@ pro main
     endif else if (update_timestep eq 'yes') then begin 
         lupdate_timestep=true
     endif else begin
-        print,"use update_timestep='yes' or 'no' in start.pro"
+        print,"use update_timestep='yes' or 'no' in start.in"
     endelse
 ;
     if (restart eq 'no') then begin
@@ -75,7 +75,23 @@ pro main
     endif else if (restart eq 'yes') then begin 
         lrestart=true
     endif else begin
-        print,"use restart='yes' or 'no' in input.pro"
+        print,"use restart='yes' or 'no' in start.in"
+    endelse
+;
+    if (print_to_screen eq 'no') then begin
+        lprint_to_screen=false
+    endif else if (print_to_screen eq 'yes') then begin
+        lprint_to_screen=true
+    endif else begin
+        print,"use print_to_screen='yes' or 'no' in start.in"
+    endelse
+;
+    if (default_plots eq 'no') then begin
+        ldefault_plots=false
+    endif else if (default_plots eq 'yes') then begin
+        ldefault_plots=true
+    endif else begin
+        print,"use default_plots='yes' or 'no' in start.in"
     endelse
 
 ;
@@ -245,6 +261,7 @@ pro main
     ap=planet_position*AU & dap=ap*0.
     mp=planet_mass*mearth
     q=mp/msun
+    print,q; originally asdfasdf
 ;
 ; temperature where the transition to type 2 migration occurs
 ; computed as H = r_hills define. The quantities do not change in time
@@ -387,13 +404,12 @@ pro main
           for ip=0,np-1 do begin
              tmp_planet = get_planet_term(sigma,tmid,cp,gamma,q[ip],sqrtgm,ap[ip],omega)
              planet_term=planet_term + tmp_planet
-             ; Should the above line be instead:
-             ; planet_term[ip] = tmp_planet
           endfor
 ;
 ; evolution equation with sigma*nu as dependent variable
 ;
           dsigma = 3*del2sigmanu + 4.5*rr1*gsigmanu - swind + planet_term
+          ; plot,rr*r_ref1,dsigma
           ; dsigma_mass = [dsigma_mass, [2*!dpi*total(dsigma*rr*dr)] ]
           ; swind_mass = [swind_mass, [2*!dpi*total(-swind*rr*dr)] ]
           ; term1_mass = [term1_mass, [2*!dpi*total((dsigma+swind-planet_term)*rr*dr)] ]
@@ -449,15 +465,17 @@ pro main
 ; print to screen
 ;
         
-        ; line="print,it,time[ic]*myr1,dt*myr1,rhomax,rhomin,mass[ic]*msun1,ttmax,ttmin,mdotm*msun_yr1"
-        ; for ip=0,np-1 do begin
-        ;     line=line+",ap["+strtrim(ip,2)+"]*r_ref1"
-        ; endfor
-        ; if (execute(line) ne 1) then begin
-        ;     print,line
-        ;     print,'There was a problem with printing to screen'
-        ;     stop
-        ; endif ; originally 447-455 were uncommented
+        if (lprint_to_screen) then begin
+          line="print,it,time[ic]*myr1,dt*myr1,rhomax,rhomin,mass[ic]*msun1,ttmax,ttmin,mdotm*msun_yr1"
+          for ip=0,np-1 do begin
+              line=line+",ap["+strtrim(ip,2)+"]*r_ref1"
+          endfor
+          if (execute(line) ne 1) then begin
+              print,line
+              print,'There was a problem with printing to screen'
+              stop
+          endif
+        endif
 ;        print,it,time[ic]*myr1,rhomax,rhomin,mass[ic]*msun1,ttmax,ttmin,mdotm*msun_yr1,ap[0]*r_ref1,ap[1]*r_ref1,ap[2]*r_ref1
 ;
 ; print to file
@@ -510,48 +528,63 @@ pro main
     if (tcheck ne tcheck_old) then begin
         isave=isave+1
         save,t,sigma,tmid,ap,filename='./data/VAR'+strtrim(isave,2)+'.sav'
-        ; print,'time=',t*myr1,' Myr. Wrote VAR'+strtrim(isave,2)+' to disk.' ; originally not commented
+        if (lprint_to_screen) then begin
+          print,'time=',t*myr1,' Myr. Wrote VAR'+strtrim(isave,2)+' to disk.'
+        endif
     endif
 
       if ((it mod itplot) eq 0) then begin
 ;
           erase
-          plot,rr*r_ref1,sigma,ys=1,$
-            title='t='+strtrim(t*myr1,2)+' Myr',$
-            yr=[.00004,5000.],xtitle='!8r!x',/ylog,xs=3,/xlog; originally .00004,5000.
-          oplot,rr*r_ref1,sigma_init,li=1
+          if (ldefault_plots) then begin
+              plot,rr*r_ref1,sigma,ys=1,$
+                title='t='+strtrim(t*myr1,2)+' Myr',$
+                yr=[.00004,500.],xtitle='!8r!x';,/ylog,xs=3,/xlog; originally .00004,5000.
+              oplot,rr*r_ref1,sigma_init,li=1
 
-          ; plot,rr*r_ref1,tmid,xs=3,$
-          ;   title='temperature',xtitle='!8r!x',/ylog,yr=[9,2000],ys=1,/xlog
-          ; oplot,rr*r_ref1,tmid_orig,li=1
+              plot,rr*r_ref1,tmid,xs=3,$
+                title='temperature',xtitle='!8r!x',/ylog,yr=[9,2000],ys=1,/xlog
+              oplot,rr*r_ref1,tmid_orig,li=1
 
-          ; plot,time[0:ic-1]*Myr1,dsigma_mass,xr=[0,tmax_myr]
-          
-          ; plot,time[0:ic-1]*Myr1,swind_mass,xr=[0,tmax_myr]
+              plot,time[0:ic-1]*Myr1,100*mass[0:ic-1]/mass[0],ys=3,$
+                title='Disk mass - Remaining percentage',xtitle='time (Myr)',xr=[0,tmax_myr],yr=[0,100]
 
-          ; plot,time[0:ic-1]*Myr1,term1_mass,xr=[0,tmax_myr],title='term1_mass vs. time'
-          
-          plot,rr*r_ref1,dsigma,title='dsigma vs. radius'
+              plot,time[0:ic-1]*Myr1,position[0:ic-1,0]*r_ref1,$
+                title='planet position',xtitle='time (myr)',xr=[0,tmax_myr],$
+                yr=[0.1,30],ys=1,/ylog,/nodata
+              for ip=0,np-1 do begin
+                  if (mp[ip]/mearth eq 1.) then begin
+                      cor=100
+                  endif else $
+                  if (mp[ip]/mearth eq 10) then begin
+                      cor=150
+                  endif else begin
+                      cor=50
+                  endelse
+                  oplot,time[0:ic-1]*Myr1,position[0:ic-1,ip]*r_ref1,color=cor
+              endfor
+          endif else begin
+              ; Alternate plots
 
-          plot,rr*r_ref1,planet_term,title='planet_term vs. radius'
+              plot,rr*r_ref1,sigma,ys=1,$
+                title='t='+strtrim(t*myr1,2)+' Myr',$
+                yr=[.00004,500.],xtitle='!8r!x';,/ylog,xs=3,/xlog; originally .00004,5000.
+              oplot,rr*r_ref1,sigma_init,li=1
 
-          plot,time[0:ic-1]*Myr1,100*mass[0:ic-1]/mass[0],ys=3,$
-            title='Disk mass - Remaining percentage',xtitle='time (Myr)',xr=[0,tmax_myr],yr=[0,100]
+              ; plot,time[0:ic-1]*Myr1,dsigma_mass,xr=[0,tmax_myr]
+              
+              ; plot,time[0:ic-1]*Myr1,swind_mass,xr=[0,tmax_myr]
 
-          ; plot,time[0:ic-1]*Myr1,position[0:ic-1,0]*r_ref1,$
-          ;   title='planet position',xtitle='time (myr)',xr=[0,tmax_myr],$
-          ;   yr=[0.1,30],ys=1,/ylog,/nodata
-          ; for ip=0,np-1 do begin
-          ;     if (mp[ip]/mearth eq 1.) then begin
-          ;         cor=100
-          ;     endif else $
-          ;     if (mp[ip]/mearth eq 10) then begin
-          ;         cor=150
-          ;     endif else begin
-          ;         cor=50
-          ;     endelse
-          ;     oplot,time[0:ic-1]*Myr1,position[0:ic-1,ip]*r_ref1,color=cor
-          ; endfor
+              ; plot,time[0:ic-1]*Myr1,term1_mass,xr=[0,tmax_myr],title='term1_mass vs. time'
+              
+              plot,rr*r_ref1,dsigma,title='dsigma vs. radius'
+
+              plot,rr*r_ref1,planet_term,title='planet_term vs. radius'
+
+              plot,time[0:ic-1]*Myr1,100*mass[0:ic-1]/mass[0],ys=3,$
+                title='Disk mass - Remaining percentage',xtitle='time (Myr)',xr=[0,tmax_myr],yr=[0,100]
+          endelse
+
 ;        wait,0.1
 
         endif
