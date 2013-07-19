@@ -21,7 +21,7 @@
  nx                         = 100     ; grid resolution                                    ;
  background_temperature     = 10.     ; background temperature,     in Kelvin              ;
  planet_position            = [10.]
- planet_mass                = [15.]
+ planet_mass                = [1.]
 ; planet_position            = [2.,3.,4.,5.,6.,10.,15.,20.,25.,29.,2.,3.,4.,5.,6.,10.,15.,20.,25.,29.,2.,3.,4.,5.,6.,10.,15.,20.,25.,29.]
 ; planet_mass                = [1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,10.,10.,10.,10.,10.,10.,10.,10.,10.,10.,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1 ]
  temperature_precision      = 0.1          ; precision of the temperature iteration        ;
