@@ -22,24 +22,28 @@ function get_planet_term,sigma,timid,cp,gamma,q,sqrtgm,ap,omega
   atmp=[[0,0,0],arg,[0,0,0]]
   dexp=der(atmp)
 ;
-  temp_pt = coef * dexp
+  temp_pt = coef * dexp ; temporary planet term
 
-  AU = 1.49d13 ; cm/AU
-  m0 = min(temp_pt,imid)
-  m1 = max(temp_pt[0:imid],ip1)
-  m2 = max(temp_pt[imid:nx-1],ip2)
-  ip2 = ip2 + imid
-  mass = total(temp_pt*rr); proportional to mass
+  ; This term should have zero mass contribution and should be nonzero only near
+  ; the planet's radius, so a parabola with the negative of its mass contribution
+  ; is added to it to achieve these properties.
+  m0 = min(temp_pt,imid) ; This line's only purpose is to assign to imid
+  m1 = max(temp_pt[0:imid],ip1) ; This line's only purpose is to assign to ip1
+  m2 = max(temp_pt[imid:nx-1],ip2) ; This lines' only purpose is to assign to ip2
+  ip2 = ip2 + imid ; Corrects index, the temp_pt slice starts at zero not imid
+  mass = total(temp_pt*rr); proportional to mass, actually
   hw = (ip2-ip1)/2. ; half-width of parabola, in terms of index
   x_zero = (ip1+ip2)/2. ; x-coordinate of the parabola's vertex
-  para = dblarr(nx)
-  x_dom = dindgen(nx) ; x domain of the function
-  ptemp = (x_dom - (x_zero + hw))*(x_dom - (x_zero - hw))
-  scale = mass / total(abs(ptemp[ip1:ip2]*rr[ip1:ip2]))
-  para[ip1:ip2] = scale * ptemp[ip1:ip2] ; everything else remains zero
+  para = dblarr(nx) ; initializes to all zeros with double precision
+  x_dom = dindgen(nx) ; x domain of the parabola function, double precision
+  ptemp = (x_dom - (x_zero + hw))*(x_dom - (x_zero - hw)) ; Creates a parabola w/
+  ; the correct roots, and arbitrary area between
+  scale = mass / total(abs(ptemp[ip1:ip2]*rr[ip1:ip2])) ; scales parabola area
+  para[ip1:ip2] = scale * ptemp[ip1:ip2] ; sets values between root, everything
+  ; else remains zero
 
   temp2_pt = temp_pt + para
-  planet_term = smooth(temp2_pt, 3, /EDGE_TRUNCATE)
+  planet_term = smooth(temp2_pt, 3, /EDGE_TRUNCATE) ; smooth temp2_pt
   ; smoothing causes some nonzero mass contribution, but it is small
 
   return,planet_term
