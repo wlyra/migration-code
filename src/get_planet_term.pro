@@ -29,17 +29,18 @@ function get_planet_term,sigma,timid,cp,gamma,q,sqrtgm,ap,omega
   m1 = max(temp_pt[0:imid],ip1)
   m2 = max(temp_pt[imid:nx-1],ip2)
   ip2 = ip2 + imid
-  sum = total(temp_pt); not mass, but scales assuming narrow nonzero region of temp_pt
+  mass = total(temp_pt*rr); proportional to mass
   hw = (ip2-ip1)/2. ; half-width of parabola, in terms of index
   x_zero = (ip1+ip2)/2. ; x-coordinate of the parabola's vertex
   para = dblarr(nx)
   x_dom = dindgen(nx) ; x domain of the function
   ptemp = (x_dom - (x_zero + hw))*(x_dom - (x_zero - hw))
-  para[ip1:ip2] = (3.*sum/(4.*hw^3) * ptemp)[ip1:ip2] ; everything else remains zero
+  scale = mass / total(abs(ptemp[ip1:ip2]*rr[ip1:ip2]))
+  para[ip1:ip2] = scale * ptemp[ip1:ip2] ; everything else remains zero
 
   temp2_pt = temp_pt + para
   planet_term = smooth(temp2_pt, 3, /EDGE_TRUNCATE)
-  ; print,total(temp_pt),total(para) ; different by ~3% right now :/
+  ; smoothing causes some nonzero mass contribution, but it is small
 
   return,planet_term
 ;
