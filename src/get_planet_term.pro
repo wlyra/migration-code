@@ -1,4 +1,4 @@
-function get_planet_term,sigma,timid,cp,gamma,q,sqrtgm,ap,omega
+function get_planet_term,sigma,tmid,cp,gamma,q,sqrtgm,ap,omega
 ;
     ;common thermo,stbz,tb,cp,cv,gamma,gamma1,epsi,norm
   common grid,rr,rrr,dr,dr1,dr2
@@ -6,11 +6,11 @@ function get_planet_term,sigma,timid,cp,gamma,q,sqrtgm,ap,omega
   nx=n_elements(rr)
   rr1=1./rr
 ;
-  cs2=timid*cp*(gamma-1)
+  cs2=tmid*cp*(gamma-1)
   H=sqrt(cs2*gamma)/omega
 ;
   coef=sign(ap-rr) * q^2 * sqrtgm * rr1
-  num = rr < ap 
+  num = rr < ap
 ;
 ; The original term was max(abs(rr-ap),H)
 ;
@@ -24,20 +24,21 @@ function get_planet_term,sigma,timid,cp,gamma,q,sqrtgm,ap,omega
 ;
   temp_pt = coef * dexp ; temporary planet term
 
-  ; This term should have zero mass contribution and should be nonzero only near
-  ; the planet's radius, so a parabola with the negative of its mass contribution
-  ; is added to it to achieve these properties.
+  ; This term should have zero mass contribution and should be nonzero only
+  ; near the planet's radius, so a parabola with the negative of its mass
+  ; contribution and roots at the analytic term's peaks is added to it to
+  ; achieve these properties.
   m0 = min(temp_pt,imid) ; This line's only purpose is to assign to imid
-  m1 = max(temp_pt[0:imid],ip1) ; This line's only purpose is to assign to ip1
-  m2 = max(temp_pt[imid:nx-1],ip2) ; This lines' only purpose is to assign to ip2
+  m1 = max(temp_pt[0:imid],ip1) ; This line assigns to ip1
+  m2 = max(temp_pt[imid:nx-1],ip2) ; This line assigns to ip2
   ip2 = ip2 + imid ; Corrects index, the temp_pt slice starts at zero not imid
   mass = total(temp_pt*rr); proportional to mass, actually
   hw = (ip2-ip1)/2. ; half-width of parabola, in terms of index
   x_zero = (ip1+ip2)/2. ; x-coordinate of the parabola's vertex
   para = dblarr(nx) ; initializes to all zeros with double precision
   x_dom = dindgen(nx) ; x domain of the parabola function, double precision
-  ptemp = (x_dom - (x_zero + hw))*(x_dom - (x_zero - hw)) ; Creates a parabola w/
-  ; the correct roots, and arbitrary area between
+  ptemp = (x_dom - (x_zero + hw))*(x_dom - (x_zero - hw)) ; Creates a parabola
+  ; with the correct roots, and arbitrary area between
   scale = mass / total(abs(ptemp[ip1:ip2]*rr[ip1:ip2])) ; scales parabola area
   para[ip1:ip2] = scale * ptemp[ip1:ip2] ; sets values between root, everything
   ; else remains zero
