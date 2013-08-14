@@ -7,7 +7,7 @@ function get_planet_term,sigma,tmid,cp,gamma,q,sqrtgm,ap,omega
   rr1=1./rr
 ;
   cs2=tmid*cp*(gamma-1)
-  H=sqrt(cs2*gamma)/omega
+  H=sqrt(cs2/gamma)/omega
 ;
   coef=sign(ap-rr) * q^2 * sqrtgm * rr1
   num = rr < ap
@@ -28,10 +28,10 @@ function get_planet_term,sigma,tmid,cp,gamma,q,sqrtgm,ap,omega
   ; near the planet's radius, so a parabola with the negative of its mass
   ; contribution and roots at the analytic term's peaks is added to it to
   ; achieve these properties.
-  m0 = min(temp_pt,imid) ; This line's only purpose is to assign to imid
+  m0 = min(abs(rr-ap),imid) ; This line's only purpose is to assign to imid
   m1 = max(temp_pt[0:imid],ip1) ; This line assigns to ip1
   m2 = max(temp_pt[imid:nx-1],ip2) ; This line assigns to ip2
-  ip2 = ip2 + imid ; Corrects index, the temp_pt slice starts at zero not imid
+  ip2 = ip2 + imid ; Corrects index, the temp_pt slice indexes from zero not imid
   mass = total(temp_pt*rr); proportional to mass, actually
   hw = (ip2-ip1)/2. ; half-width of parabola, in terms of index
   x_zero = (ip1+ip2)/2. ; x-coordinate of the parabola's vertex
