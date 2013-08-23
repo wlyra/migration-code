@@ -67,7 +67,7 @@ pro main
     endif else if (carve_gap eq 'yes') then begin 
         lplanet_gap=true
     endif else begin
-        print,"use carve_gap='yes' or 'no' in start.pro"
+        print,"use carve_gap='yes' or 'no' in start.in"
     endelse
 ;
     if (update_timestep eq 'no') then begin
@@ -123,9 +123,9 @@ pro main
     GNewton=6.67d-8
     Rgas=8.314d7
     stefan_boltzmann=5.6704d-5  ; erg cm-2 s-1 K-4
-    dsigma_mass = [] ; originally nothing
-    swind_mass = [] ; originally nothing
-    term1_mass = [] ; originally nothing
+    dsigma_mass = dblarr(5e5) ; added by Adam Ball
+    swind_mass = dblarr(5e5) ; added by Adam Ball
+    term1_mass = dblarr(5e5) ; added by Adam Ball
 ;
 ; grid
 ;
@@ -269,7 +269,6 @@ pro main
     ap=planet_position*AU & dap=ap*0.
     mp=planet_mass*mearth
     q=mp/msun
-    print,q; originally asdfasdf
 ;
 ; temperature where the transition to type 2 migration occurs
 ; computed as H = r_hills define. The quantities do not change in time
@@ -408,13 +407,6 @@ pro main
           del2sigmanu = der2(sigma_nu)
           gsigmanu    =  der(sigma_nu)       
 ;
-<<<<<<< HEAD
-          planet_term=0
-          for ip=0,np-1 do begin
-             tmp_planet = get_planet_term(sigma,tmid,cp,gamma,q[ip],sqrtgm,ap[ip],omega)
-             planet_term=planet_term + tmp_planet
-          endfor
-=======
           if (lplanet_gap eq true) then begin
                                 ;loop over the np planet present in
                                 ;the simulation, sum their contributions
@@ -425,15 +417,13 @@ pro main
           endif else begin
              planet_term=replicate(0.,nx)
           endelse
->>>>>>> d579b87c8756c29ad07fc88bf10852c3662c0504
 ;
 ; evolution equation with sigma*nu as dependent variable
 ;
           dsigma = 3*del2sigmanu + 4.5*rr1*gsigmanu - swind + planet_term
-          ; plot,rr*r_ref1,dsigma
-          ; dsigma_mass = [dsigma_mass, [2*!dpi*total(dsigma*rr*dr)] ]
-          ; swind_mass = [swind_mass, [2*!dpi*total(-swind*rr*dr)] ]
-          ; term1_mass = [term1_mass, [2*!dpi*total((dsigma+swind-planet_term)*rr*dr)] ]
+          ; dsigma_mass[it] = 2*!dpi*total(dsigma*rr*dr) ; added by Adam Ball
+          ; swind_mass[it] = 2*!dpi*total(-swind*rr*dr) ; added by Adam Ball
+          ; term1_mass[it] = 2*!dpi*total((dsigma+swind-planet_term)*rr*dr) ; added by Adam Ball
         endif
 ;
 ; planet evolution (Lagrangian)
@@ -476,6 +466,9 @@ pro main
       if ((it mod itdiagnos) eq 0) then begin
         time[ic]=t
         mass[ic]=2*!dpi*total(sigma*rr*dr)
+        ; dsigma_mass[ic] = 2*!dpi*total(dsigma*rr*dr) ; added by Adam Ball
+        ; swind_mass[ic] = 2*!dpi*total(-swind*rr*dr) ; added by Adam Ball
+        ; term1_mass[ic] = 2*!dpi*total((dsigma+swind-planet_term)*rr*dr) ; added by Adam Ball
         position[ic,*]=ap
         rhomax=max(sigma)
         rhomin=min(sigma)
@@ -560,7 +553,7 @@ pro main
           if (ldefault_plots) then begin
               plot,rr*r_ref1,sigma,ys=1,$
                 title='t='+strtrim(t*myr1,2)+' Myr',$
-                yr=[.00004,500.],xtitle='!8r!x';,/ylog,xs=3,/xlog; originally .00004,5000.
+                yr=[.00004,5000.],xtitle='!8r!x',/ylog,xs=3,/xlog
               oplot,rr*r_ref1,sigma_init,li=1
 
               plot,rr*r_ref1,tmid,xs=3,$
@@ -587,31 +580,34 @@ pro main
           endif else begin
               ; Alternate plots
 
-<<<<<<< HEAD
               plot,rr*r_ref1,sigma,ys=1,$
                 title='t='+strtrim(t*myr1,2)+' Myr',$
-                yr=[.00004,500.],xtitle='!8r!x';,/ylog,xs=3,/xlog; originally .00004,5000.
+                yr=[.00004,500.],xtitle='!8r!x';,/ylog,xs=3,/xlog ; If using log, change 500 to 5000
               oplot,rr*r_ref1,sigma_init,li=1
 
-              ; plot,time[0:ic-1]*Myr1,dsigma_mass,xr=[0,tmax_myr]
+              ; plot,time[0:ic-1]*Myr1,dsigma_mass,xr=[0,tmax_myr],title='dsigma_mass vs. time'
+              ; plot,dsigma_mass[0:it],xr=[0,5e5],title='dsigma_mass vs. time'
               
-              ; plot,time[0:ic-1]*Myr1,swind_mass,xr=[0,tmax_myr]
-=======
-          ; plot,time[0:ic-1]*Myr1,term1_mass,xr=[0,tmax_myr],title='term1_mass vs. time'
-          
-          plot,rr*r_ref1,dsigma,title='dsigma vs. radius',xs=3,/xlog
-
-          plot,rr*r_ref1,planet_term,title='planet_term vs. radius',xs=3,/xlog
->>>>>>> d579b87c8756c29ad07fc88bf10852c3662c0504
+              ; plot,time[0:ic-1]*Myr1,swind_mass,xr=[0,tmax_myr],title='swind_mass vs. time'
+              ; plot,swind_mass[0:it],xr=[0,5e5],title='swind_mass vs. time'
 
               ; plot,time[0:ic-1]*Myr1,term1_mass,xr=[0,tmax_myr],title='term1_mass vs. time'
+              ; plot,term1_mass[0:it],xr=[0,5e5],title='term1_mass vs. time'
               
-              plot,rr*r_ref1,dsigma,title='dsigma vs. radius'
+              ; plot,rr*r_ref1,dsigma,title='dSigma vs. Radius',$
+              ;   xtitle='Radius (AU)',ytitle='Density'
 
-              plot,rr*r_ref1,planet_term,title='planet_term vs. radius'
+              plot,rr*r_ref1,planet_term,title='Gap-Carving Term vs. Radius',$
+                xtitle='Radius (AU)',ytitle='Density'
+
+              plot,rr*r_ref1,dsigma - planet_term + swind,title='Viscous Term vs. Radius',$
+                xtitle='Radius (AU)',ytitle='Density'
+
+              ; plot,rr*r_ref1,-swind,title='Wind Term vs. Radius',$
+              ;   xtitle='Radius (AU)',ytitle='Density'
 
               plot,time[0:ic-1]*Myr1,100*mass[0:ic-1]/mass[0],ys=3,$
-                title='Disk mass - Remaining percentage',xtitle='time (Myr)',xr=[0,tmax_myr],yr=[0,100]
+                title='Disk mass - Remaining percentage',xtitle='time (Myr)',xr=[0,tmax_myr],yr=[0,110]
           endelse
 
 ;        wait,0.1
